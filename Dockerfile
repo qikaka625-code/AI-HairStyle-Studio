@@ -1,21 +1,29 @@
-# 1. 使用 Node 环境
+# 1. 拿一个干净的 Node 环境
 FROM node:20
 
-# 2. 设置工作目录
+# 2. 设个家目录
 WORKDIR /app
 
-# 3. 复制依赖
+# 3. 把 package.json 拿过来
 COPY package*.json ./
 
-# 4. 【关键】强制安装所有依赖 (包括 Vite)
+# 4. 【关键】安装所有依赖 + 一个简单的网页服务器 (serve)
 RUN npm install
+RUN npm install -g serve
 
-# 5. 复制代码
+# 5. 把所有代码拿过来
 COPY . .
 
-# 6. 设置端口
-ENV PORT=8080
+# 6. 【关键】打包！把 React 代码变成浏览器能懂的 HTML/JS
+# 之前这里报错是因为代码有问题，现在你代码修好了，这里一定能过！
+RUN npm run build
 
-# 7. 【关键】改回用 Vite 直接启动
-# 既然你已经修好了 allowedHosts，这个命令现在就是最好用的！
-CMD ["npx", "vite", "--host", "0.0.0.0", "--port", "8080"]
+# 7. 告诉服务器端口是 8080
+ENV PORT=8080
+EXPOSE 8080
+
+# 8. 【关键】启动！
+# 不用 vite 了，直接用 serve 运行打包好的 dist 文件夹
+# -s: 单页应用模式 (防止刷新报错)
+# -l 8080: 强制监听 8080 端口
+CMD ["serve", "-s", "dist", "-l", "8080"]
